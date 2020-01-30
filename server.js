@@ -8,11 +8,38 @@ http.createServer(function (req, res) {
     res.end('Hello World\n');
 }).listen(port);
 
-
 let fs = require('fs');
 
-//// Promise
-//var q = require('q');
+const fileName = 'schema.json'; 
+
+// Simple callback ======================================
+
+fs.readFile(fileName, 'utf8', (err, data) => {
+    if (err) {
+        console.log(" Error happens .");
+    }
+    else {
+        console.log(`fs.readFile(...):\n${data}`);
+    }
+});
+
+// Events ================================================
+
+var EventEmitter = require('events').EventEmitter;
+var emitter = new EventEmitter();
+
+emitter.on('read_file', fileName => {
+    fs.readFile(fileName, 'utf8', (err, data) => {
+        if (err) 
+            console.log(`Error happens. ${err}`);
+        else
+            console.log(`emitter:\n${data}`);
+    });
+});
+
+emitter.emit('read_file', fileName);
+
+// Promice function ==========================================
 
 function readFile(fileName) {
     return new Promise((resolve, reject) => {
@@ -25,48 +52,44 @@ function readFile(fileName) {
     });
 }
 
-(async function test() {
+// Promice - then ==========================================
+
+readFile(fileName).then((data) => {
+    // success scenario
+    console.log(`readFile(...).then:\n${data}`);
+}).catch(err => {
+    // error case scenario
+    console.log(`Error happens. ${err}`);
+});
+
+// Promice - Async - Await - 1 ==============================
+
+(async function test1() {
     try {
-        let data = await readFile('schema.json');
-        console.log(data);
+        let data = await readFile(fileName);
+        console.log(`test1():\n${data}`);
     }
     catch (e) {
         console.log(e);
     }
-}) ();
+})();
 
-//readFile('schema.json').then((data) => {
-//    // success scenario
-//    console.log(data);
-//}).catch((err) => {
-//    // error case scenario
-//    console.log(' Error happens .' + err);
-//});
+// Promice - Async - Await - 2 ==============================
 
-// Simple callback
-fs.readFile('schema.json', 'utf8', (err, data) => {
-    if (err) {
-        console.log(" Error happens .");
+async function test2() {
+    try {
+        let data = await readFile(fileName);
+        console.log(`test2():\n${data}`);
     }
-    else {
-        console.log(data);
+    catch (e) {
+        console.log(e);
     }
-});
+}
 
-// Events
-var EventEmitter = require('events').EventEmitter;
-var emitter = new EventEmitter();
+let promise2 = test2();
 
-emitter.on('read_file', fileName => {
-    fs.readFile(fileName, 'utf8', (err, data) => {
-        if (err) {
-            console.log(" Error happens .");
-        }
-        else {
-            console.log(data);
-        }
-    });
-});
-
-emitter.emit('read_file', 'schema.json');
+(async function fulfill2() {
+    await promise2;
+})();
+    
 
